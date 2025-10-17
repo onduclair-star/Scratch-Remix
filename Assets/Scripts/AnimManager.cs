@@ -1,52 +1,57 @@
-using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AnimManager : MonoBehaviour
 {
-    [HideInInspector] public static bool isLowQuality = false;
+    public static bool isLowQuality = false;
 
+    [Header("References")]
     public UiManager uiManager;
-    public RectTransform toolbar;
     public FadeController fadeController;
+    public RectTransform toolbar;
     public ToolbarHoverController hoverController;
 
     [SerializeField] private float menuExtraDelay = 1f;
-
-    private float menuClosedTime = -Mathf.Infinity;
+    private float lastCloseTime = -Mathf.Infinity;
     private bool lastMenuOpen = false;
 
-    void Awake()
+    private void Awake()
     {
-        hoverController.Initialize(toolbar);
+        if (toolbar && hoverController)
+            hoverController.Initialize(toolbar);
     }
 
-    void Update()
+    private void Update()
     {
+        if (!uiManager) return;
+
+        bool menuOpen = uiManager.IsAnyMenuOpen;
+
         if (isLowQuality)
         {
-            bool mouseOver = RectTransformUtility.RectangleContainsScreenPoint(toolbar, Input.mousePosition, null);
-            toolbar.gameObject.SetActive(mouseOver);
+            // 低画质模式，简单 alpha 显示 toolbar 内部元素
+            hoverController.UpdateToolbarPosition(menuOpen);
+            return;
         }
-        else
+
+        // 只对 toolbar 内部元素 Fade，不改父物体
+        var fadeTargets = new List<GameObject>();
+        foreach (Transform child in toolbar)
+            fadeTargets.Add(child.gameObject);
+
+        if (lastMenuOpen && !menuOpen)
         {
-            bool menuOpen = uiManager.IsAnyMenuOpen();
-
-            if (lastMenuOpen && !menuOpen)
-            {
-                menuClosedTime = Time.time;
-                fadeController.FadeOutGroup(0); // 假设菜单组是0
-            }
-            else if (!lastMenuOpen && menuOpen)
-            {
-                fadeController.FadeInGroup(0);
-            }
-            lastMenuOpen = menuOpen;
-
-            bool forceShow = menuOpen || (Time.time - menuClosedTime < menuExtraDelay);
-            hoverController.UpdateToolbarPosition(forceShow);
+            lastCloseTime = Time.time;
+            fadeController.Fade(fadeTargets, false);
         }
-    }
+        else if (!lastMenuOpen && menuOpen)
+        {
+            fadeController.Fade(fadeTargets, true);
+        }
 
-    public void StartFadeIn() => fadeController.FadeInGroup(0);
-    public void StartFadeOut(Action onComplete = null) => fadeController.FadeOutGroup(0, onComplete);
+        lastMenuOpen = menuOpen;
+
+        bool forceShow = menuOpen || (Time.time - lastCloseTime < menuExtraDelay);
+        hoverController.UpdateToolbarPosition(forceShow);
+    }
 }

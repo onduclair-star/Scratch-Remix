@@ -26,7 +26,6 @@ public class GeneralManager : MonoBehaviour
     {
         SetGameObjectsActive(highQualityGameObjects, false);
         SetGameObjectsActive(mediumQualityGameObjects, false);
-        AnimManager.isLowQuality = true;
         print("🪦 for high and midium quality objs.");
     }
 

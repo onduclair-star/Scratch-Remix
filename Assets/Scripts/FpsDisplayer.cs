@@ -10,8 +10,6 @@ public class FpsDisplayer : MonoBehaviour
 
     void Update()
     {
-        if (!fpsText) return;
-
         float currentFPS = 1f / Time.unscaledDeltaTime;
         smoothedFPS = Mathf.Lerp(smoothedFPS, currentFPS, 
             1f - Mathf.Exp(-smoothing * Time.unscaledDeltaTime));

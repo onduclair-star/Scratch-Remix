@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 
 public class ToolbarHoverController : MonoBehaviour
 {
-    [Header("Hover Settings")]
     [SerializeField] private float baseScreenEdgeTriggerHeight = 50f;
     [SerializeField] private float moveDuration = 0.5f;
     [SerializeField] private float baseHideDelay = 0.05f;
@@ -28,42 +27,32 @@ public class ToolbarHoverController : MonoBehaviour
 
     public void Initialize(RectTransform toolbar)
     {
-        if (this.toolbar != null) return;
-        
         this.toolbar = toolbar;
+
         visiblePos = toolbar.anchoredPosition;
         hiddenPos = visiblePos + new Vector2(0, toolbar.rect.height);
         toolbar.anchoredPosition = hiddenPos;
         startPos = hiddenPos;
+
         currentHideDelay = baseHideDelay;
         currentTriggerHeight = baseScreenEdgeTriggerHeight;
 
-        if (Mouse.current != null)
-        {
-            lastMousePosition = Mouse.current.position.ReadValue();
-            lastMouseMoveTime = Time.unscaledTime;
-        }
+        lastMousePosition = Mouse.current.position.ReadValue();
+        lastMouseMoveTime = Time.unscaledTime;
     }
 
     public void UpdateToolbarPosition(bool forceShow)
     {
-        if (toolbar == null) return;
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        bool hover = CheckHover(mousePos);
+        CalculateMouseSpeed(mousePos);
+        UpdateExitSpeed(hover);
 
-        bool hover = false;
-
-        if (Mouse.current != null)
-        {
-            Vector2 currentMousePos = Mouse.current.position.ReadValue();
-            hover = CheckHover(currentMousePos);
-            CalculateMouseSpeed(currentMousePos);
-            UpdateExitSpeed(hover);
-
-            float deltaTime = Time.unscaledDeltaTime;
-            UpdateHoverAccum(deltaTime, hover);
-        }
+        float deltaTime = Time.unscaledDeltaTime;
+        UpdateHoverAccum(deltaTime, hover);
 
         bool targetShow = forceShow || hover || (Time.unscaledTime - lastHoverTime <= currentHideDelay);
-        
+
         if (targetShow != shouldShow)
         {
             shouldShow = targetShow;
@@ -71,7 +60,7 @@ public class ToolbarHoverController : MonoBehaviour
             startPos = toolbar.anchoredPosition;
         }
 
-        moveTimer += Time.unscaledDeltaTime / moveDuration;
+        moveTimer += deltaTime / moveDuration;
         moveTimer = Mathf.Clamp01(moveTimer);
         float smoothT = moveTimer * moveTimer * (3f - 2f * moveTimer);
         Vector2 targetPos = shouldShow ? visiblePos : hiddenPos;
@@ -90,8 +79,7 @@ public class ToolbarHoverController : MonoBehaviour
         float deltaTime = Time.unscaledTime - lastMouseMoveTime;
         if (deltaTime > 0.01f)
         {
-            float distance = Vector2.Distance(currentPos, lastMousePosition);
-            currentMouseSpeed = distance / deltaTime;
+            currentMouseSpeed = Vector2.Distance(currentPos, lastMousePosition) / deltaTime;
             lastMousePosition = currentPos;
             lastMouseMoveTime = Time.unscaledTime;
         }
@@ -99,8 +87,7 @@ public class ToolbarHoverController : MonoBehaviour
 
     private void UpdateExitSpeed(bool hover)
     {
-        if (wasHovering && !hover) 
-            exitSpeed = currentMouseSpeed;
+        if (wasHovering && !hover) exitSpeed = currentMouseSpeed;
         wasHovering = hover;
     }
 
@@ -113,13 +100,12 @@ public class ToolbarHoverController : MonoBehaviour
         }
         else
         {
-            float effectiveDecayRate = GetSpeedAdjustedDecayRate(exitSpeed);
-            hoverAccum = Mathf.Max(0f, hoverAccum - effectiveDecayRate * deltaTime);
+            hoverAccum = Mathf.Max(0f, hoverAccum - GetSpeedAdjustedDecayRate(exitSpeed) * deltaTime);
         }
         currentHideDelay = CalculateSmartHideDelay(hoverAccum, exitSpeed);
     }
 
-    float CalculateSmartHideDelay(float accumulatedTime, float speedAtExit)
+    private float CalculateSmartHideDelay(float accumulatedTime, float speedAtExit)
     {
         float baseDelay = baseHideDelay + accumulatedTime * 0.1f;
         if (speedAtExit < speedThreshold)
@@ -135,7 +121,7 @@ public class ToolbarHoverController : MonoBehaviour
         }
     }
 
-    float GetSpeedAdjustedDecayRate(float speed)
+    private float GetSpeedAdjustedDecayRate(float speed)
     {
         return speed < speedThreshold ? decayRate * 0.5f : decayRate * 2f;
     }

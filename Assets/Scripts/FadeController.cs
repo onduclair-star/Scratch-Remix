@@ -5,17 +5,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [Serializable]
-public class FadeGroup
+public class FadeTarget
 {
-    public string groupName; // 可选，方便识别
-    public List<GameObject> targets;
+    public GameObject target;
 }
 
 public class FadeController : MonoBehaviour
 {
-    [Header("Fade Groups")]
-    [SerializeField] private List<FadeGroup> fadeGroups;
-
     [Header("Fade Settings")]
     [SerializeField] private float fadeInDuration = 0.3f;
     [SerializeField] private float fadeOutDuration = 0.5f;
@@ -24,105 +20,37 @@ public class FadeController : MonoBehaviour
 
     [Header("Scale Effect")]
     [SerializeField] private bool enableScaleEffect = true;
-    [SerializeField] private Vector2 scaleFrom = new Vector2(0.8f, 0.8f);
-    [SerializeField] private Vector2 scaleTo = new Vector2(1f, 1f);
+    [SerializeField] private Vector2 scaleFrom = new(0.8f, 0.8f);
+    [SerializeField] private Vector2 scaleTo = new(1f, 1f);
 
-    private readonly List<Material> currentMaterials = new();
-    private readonly List<Transform> currentTransforms = new();
-    private float currentAlpha = 0f;
-
-    private Coroutine fadeCoroutine;
-
-    // 淡入指定组
-    public void FadeInGroup(int groupIndex) => StartFadeGroup(groupIndex, true);
-
-    // 淡出指定组
-    public void FadeOutGroup(int groupIndex, Action onComplete = null) => StartFadeGroup(groupIndex, false, onComplete);
-
-    // 淡入淡出组
-    private void StartFadeGroup(int groupIndex, bool fadeIn, Action onComplete = null)
+    /// <summary>
+    /// Fade 一组 GameObject
+    /// </summary>
+    public Coroutine Fade(List<GameObject> objects, bool fadeIn, Action onComplete = null)
     {
-        if (groupIndex < 0 || groupIndex >= fadeGroups.Count) return;
-
-        var group = fadeGroups[groupIndex]?.targets;
-        if (group == null || group.Count == 0) return;
-
-        // 清空列表
-        currentMaterials.Clear();
-        currentTransforms.Clear();
-
-        foreach (var go in group)
-        {
-            if (go == null) continue;
-
-            if (go.TryGetComponent<Renderer>(out var r)) currentMaterials.Add(r.material);
-            else if (go.TryGetComponent<Image>(out var img)) currentMaterials.Add(img.material);
-
-            currentTransforms.Add(go.transform);
-            if (fadeIn) go.SetActive(true);
-        }
-
-        // 安全 Coroutine，不 Stop 之前的，允许淡入淡出同时进行
-        fadeCoroutine = StartCoroutine(FadeRoutine(fadeIn, onComplete));
+        if (objects == null || objects.Count == 0) return null;
+        return StartCoroutine(FadeRoutine(objects, fadeIn, onComplete));
     }
 
-    // 单个对象淡入淡出
-    public void FadeObject(GameObject go, bool fadeIn, float duration)
-    {
-        if (go == null) return;
-        StartCoroutine(FadeGORoutine(go, fadeIn, duration));
-    }
-
-    private IEnumerator FadeGORoutine(GameObject go, bool fadeIn, float duration)
-    {
-        Material mat = null;
-        if (go.TryGetComponent<Renderer>(out var r)) mat = r.material;
-        else if (go.TryGetComponent<Image>(out var img)) mat = img.material;
-
-        if (mat == null)
-        {
-            go.SetActive(fadeIn);
-            yield break;
-        }
-
-        if (fadeIn) go.SetActive(true);
-
-        float startAlpha = mat.GetColor("_Color").a;
-        float targetAlpha = fadeIn ? 1f : 0f;
-        float time = 0f;
-
-        while (time < duration)
-        {
-            time += Time.unscaledDeltaTime;
-            float t = time / duration;
-            Color c = mat.GetColor("_Color");
-            c.a = Mathf.Lerp(startAlpha, targetAlpha, t);
-            mat.SetColor("_Color", c);
-            yield return null;
-        }
-
-        Color final = mat.GetColor("_Color");
-        final.a = targetAlpha;
-        mat.SetColor("_Color", final);
-
-        if (!fadeIn) go.SetActive(false);
-    }
-
-    private IEnumerator FadeRoutine(bool fadeIn, Action onComplete = null)
+    private IEnumerator FadeRoutine(List<GameObject> objects, bool fadeIn, Action onComplete)
     {
         float duration = fadeIn ? fadeInDuration : fadeOutDuration;
         AnimationCurve curve = fadeIn ? fadeInCurve : fadeOutCurve;
 
-        float startAlpha = currentAlpha;
-        float targetAlpha = fadeIn ? 1f : 0f;
+        var graphics = new List<Graphic>();
+        var renderers = new List<Renderer>();
+        var transforms = new List<Transform>();
 
-        Vector3 startScale = scaleFrom;
-        Vector3 endScale = scaleTo;
-
-        if (!fadeIn && enableScaleEffect && currentTransforms.Count > 0)
+        foreach (var go in objects)
         {
-            startScale = currentTransforms[0].localScale;
-            endScale = scaleFrom * 0.9f;
+            if (!go) continue;
+
+            if (go.TryGetComponent(out Graphic g)) graphics.Add(g);
+            if (go.TryGetComponent(out Renderer r)) renderers.Add(r);
+
+            transforms.Add(go.transform);
+
+            if (fadeIn) go.SetActive(true);
         }
 
         float time = 0f;
@@ -130,47 +58,59 @@ public class FadeController : MonoBehaviour
         {
             time += Time.unscaledDeltaTime;
             float t = curve.Evaluate(time / duration);
+            float alpha = fadeIn ? t : 1f - t;
 
-            SetAlpha(Mathf.Lerp(startAlpha, targetAlpha, t));
+            // Graphic 透明度
+            foreach (var g in graphics)
+                if (g) g.material.color = SetAlpha(g.material.color, alpha);
 
+            // Renderer 透明度
+            foreach (var r in renderers)
+            {
+                if (r && r.material.HasProperty("_Color"))
+                {
+                    Color c = r.material.color;
+                    c.a = alpha;
+                    r.material.color = c;
+                }
+            }
+
+            // 缩放效果
             if (enableScaleEffect)
             {
-                for (int i = 0; i < currentTransforms.Count; i++)
-                {
-                    if (currentTransforms[i] != null)
-                        currentTransforms[i].localScale = Vector3.Lerp(startScale, endScale, t);
-                }
+                Vector3 scale = Vector3.Lerp(scaleFrom, scaleTo, alpha);
+                foreach (var tr in transforms)
+                    if (tr) tr.localScale = scale;
             }
 
             yield return null;
         }
 
-        SetAlpha(targetAlpha);
+        float finalAlpha = fadeIn ? 1f : 0f;
 
-        // 💡 FadeOut 安全关闭对象
+        foreach (var g in graphics)
+            if (g) g.material.color = SetAlpha(g.material.color, finalAlpha);
+
+        foreach (var r in renderers)
+            if (r && r.material.HasProperty("_Color"))
+            {
+                Color c = r.material.color;
+                c.a = finalAlpha;
+                r.material.color = c;
+            }
+
         if (!fadeIn)
         {
-            foreach (var tr in currentTransforms)
-            {
-                if (tr != null && tr.gameObject != null)
-                    tr.gameObject.SetActive(false);
-            }
-
-            onComplete?.Invoke();
+            foreach (var go in objects)
+                if (go) go.SetActive(false);
         }
+
+        onComplete?.Invoke();
     }
 
-    private void SetAlpha(float alpha)
+    private Color SetAlpha(Color c, float alpha)
     {
-        currentAlpha = alpha;
-        foreach (var mat in currentMaterials)
-        {
-            if (mat != null && mat.HasProperty("_Color"))
-            {
-                Color c = mat.GetColor("_Color");
-                c.a = alpha;
-                mat.SetColor("_Color", c);
-            }
-        }
+        c.a = alpha;
+        return c;
     }
 }

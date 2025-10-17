@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Menu
+  m_Name: Blocks_Chooser
   m_Shader: {fileID: 4800000, guid: 6b8e5e95a65a54cbabf74e3e4c3f2634, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -41,11 +41,16 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BlurRadius: 3
+    - _DownSample: 2
     - _EnableExternalAlpha: 0
-    - _Radius: 0.1
+    - _OutlineWidth: 0.056
+    - _Radius: 0.17
     - _ZWrite: 0
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.51450694, g: 0.71044666, b: 0.8867924, a: 0.31764707}
+    - _OutlineColor: {r: 0.53813636, g: 0.8207547, b: 0.5484368, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+    - _TintColor: {r: 1, g: 1, b: 1, a: 0.19215687}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

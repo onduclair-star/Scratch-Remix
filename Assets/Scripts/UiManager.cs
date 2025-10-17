@@ -1,86 +1,43 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class UiManager : MonoBehaviour
 {
-    [HideInInspector] public bool engineMenuOpen = false, windowMenuOpen = false;
+    [Header("Menus")]
+    [SerializeField] private MenuView engineMenu;
+    [SerializeField] private MenuView windowMenu;
 
-    public AnimManager animManager;
-    public GameObject settingsMenu, windowMenu;
-    public GameObject settingsHighlight, windowHighlight;
-    public RectTransform toolbarRt;
-
-    void Awake()
+    [System.Serializable]
+    public class AreaPair
     {
-        settingsHighlight.SetActive(false);
-        settingsMenu.SetActive(false);
-        windowHighlight.SetActive(false);
-        windowMenu.SetActive(false);
+        public string name;
+        public GameObject area;
+        public GameObject background;
     }
 
-    void Start()
+    [Header("Areas")]
+    [SerializeField] private AreaPair[] areas;
+
+    public bool IsAnyMenuOpen => engineMenu.IsVisible || windowMenu.IsVisible;
+
+    public void ToggleEngineMenu()
     {
-        settingsHighlight.transform.SetAsFirstSibling();
-        windowHighlight.transform.SetAsFirstSibling();
+        if (engineMenu.IsVisible) engineMenu.Hide();
+        else engineMenu.Show();
     }
 
-    void Update()
+    public void ToggleWindowMenu()
     {
-        Vector3 mousePos = Mouse.current.position.ReadValue();
-        if (!RectTransformUtility.RectangleContainsScreenPoint(toolbarRt, mousePos))
-        {
-            if (Mouse.current.leftButton.wasPressedThisFrame)
-            {
-                if (engineMenuOpen) ShowOrHideEngineMenu();
-                if (windowMenuOpen) ShowOrHideWindowMenu();
-            }
-            else
-            {
-                if (!engineMenuOpen && settingsHighlight.activeSelf) settingsHighlight.SetActive(false);
-                if (!windowMenuOpen && windowHighlight.activeSelf) windowHighlight.SetActive(false);
-            }
-        }
+        if (windowMenu.IsVisible) windowMenu.Hide();
+        else windowMenu.Show();
     }
 
-    public bool IsAnyMenuOpen() => engineMenuOpen || windowMenuOpen;
-
-    public void ShowOrHideEngineMenu()
+    public void ShowArea(string name)
     {
-        engineMenuOpen = !engineMenuOpen;
-
-        if (engineMenuOpen)
+        foreach (var a in areas)
         {
-            settingsHighlight.SetActive(true);
-            settingsMenu.SetActive(true);
-            animManager.StartFadeIn();
-        }
-        else
-        {
-            animManager.StartFadeOut(() =>
-            {
-                settingsMenu.SetActive(false);
-                settingsHighlight.SetActive(false);
-            });
-        }
-    }
-
-    public void ShowOrHideWindowMenu()
-    {
-        windowMenuOpen = !windowMenuOpen;
-
-        if (windowMenuOpen)
-        {
-            windowHighlight.SetActive(true);
-            windowMenu.SetActive(true);
-            animManager.StartFadeIn();
-        }
-        else
-        {
-            animManager.StartFadeOut(() =>
-            {
-                windowMenu.SetActive(false);
-                windowHighlight.SetActive(false);
-            });
+            bool active = a.name == name;
+            if (a.area) a.area.SetActive(active);
+            if (a.background) a.background.SetActive(active);
         }
     }
 }
