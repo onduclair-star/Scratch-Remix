@@ -1,8 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class UIManager : MonoBehaviour
 {
+    [HideInInspector]
+    public static bool shouldShow = false;
+
+    public GameObject toolbar;
     public MenuView engineMenu;
     public MenuView windowMenu;
 
@@ -17,6 +22,44 @@ public class UIManager : MonoBehaviour
     public AreaPair[] areas;
 
     public bool IsAnyMenuOpen => engineMenu.IsVisible || windowMenu.IsVisible;
+
+    void Update()
+    {
+        if (UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            if (!IsPointerOverUI())
+            {
+                shouldShow = false;
+            }
+        }
+    }
+
+    private bool IsPointerOverUI()
+    {
+        PointerEventData pointerData = new(EventSystem.current)
+        {
+            position = UnityEngine.InputSystem.Mouse.current.position.ReadValue()
+        };
+
+        List<RaycastResult> results = new();
+
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        foreach (var result in results)
+        {
+            GameObject hitObject = result.gameObject;
+
+            if (hitObject == toolbar || hitObject.transform.IsChildOf(toolbar.transform))
+                return true;
+
+            if (engineMenu.IsVisible && (hitObject == engineMenu.gameObject || hitObject.transform.IsChildOf(engineMenu.transform)))
+                return true;
+            if (windowMenu.IsVisible && (hitObject == windowMenu.gameObject || hitObject.transform.IsChildOf(windowMenu.transform)))
+                return true;
+        }
+
+        return false;
+    }
 
     public void ToggleEngineMenu()
     {
@@ -41,7 +84,7 @@ public class UIManager : MonoBehaviour
 
     public List<GameObject> GetAllFadeObjects()
     {
-        List<GameObject> result = new List<GameObject>();
+        List<GameObject> result = new();
         result.AddRange(engineMenu.fadeObjects);
         result.AddRange(windowMenu.fadeObjects);
         return result;

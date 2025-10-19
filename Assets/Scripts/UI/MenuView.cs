@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class MenuView : MonoBehaviour
 {
+
     public UIFadeController fadeController;
-    public List<GameObject> fadeObjects = new List<GameObject>();
+    public List<GameObject> fadeObjects = new();
     public GameObject highlight;
 
     private bool isVisible;
@@ -21,6 +22,7 @@ public class MenuView : MonoBehaviour
         isVisible = true;
         highlight.SetActive(true);
         fadeController.Fade(fadeObjects, true, onComplete);
+        UIManager.shouldShow = true;
     }
 
     public void Hide(Action onComplete = null)
@@ -31,6 +33,7 @@ public class MenuView : MonoBehaviour
             highlight.SetActive(false);
             onComplete?.Invoke();
         });
+        UIManager.shouldShow = false;
     }
 
     public bool IsVisible => isVisible;
