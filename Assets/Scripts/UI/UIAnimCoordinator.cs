@@ -25,16 +25,6 @@ public class UIAnimCoordinator : MonoBehaviour
             return;
         }
 
-        if (lastMenuOpen && !menuOpen)
-        {
-            lastCloseTime = Time.time;
-            fadeController.Fade(toolbarAnimator.transform, false);
-        }
-        else if (!lastMenuOpen && menuOpen)
-        {
-            fadeController.Fade(toolbarAnimator.transform, true);
-        }
-
         lastMenuOpen = menuOpen;
 
         bool forceShow = menuOpen || (Time.time - lastCloseTime < menuExtraDelay);
