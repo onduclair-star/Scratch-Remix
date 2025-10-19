@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public class MenuView : MonoBehaviour
+public class MenuView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-
     public UIFadeController fadeController;
     public List<GameObject> fadeObjects = new();
     public GameObject highlight;
+
+    public bool checkPointer;
 
     private bool isVisible;
 
@@ -15,6 +17,18 @@ public class MenuView : MonoBehaviour
     {
         highlight.SetActive(false);
         foreach (var go in fadeObjects) go.SetActive(false);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (checkPointer)
+            fadeController.Fade(fadeObjects, true);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (checkPointer)
+            fadeController.Fade(fadeObjects, false);
     }
 
     public void Show(Action onComplete = null)

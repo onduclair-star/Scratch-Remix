@@ -12,12 +12,17 @@ public class UIFadeController : MonoBehaviour
     public AnimationCurve fadeOutCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     public bool enableScaleEffect = true;
-    public Vector2 scaleFrom = new Vector2(0.8f, 0.8f);
-    public Vector2 scaleTo = new Vector2(1f, 1f);
+    public Vector2 scaleFrom = new(0.8f, 0.8f);
+    public Vector2 scaleTo = new(1f, 1f);
+
+    private Coroutine currentFade;
+    private float currentAlpha = 0f;
 
     public Coroutine Fade(List<GameObject> objects, bool fadeIn, Action onComplete = null)
     {
-        return StartCoroutine(FadeRoutine(objects, fadeIn, onComplete));
+        if (currentFade != null) StopCoroutine(currentFade);
+        currentFade = StartCoroutine(FadeRoutine(objects, fadeIn, onComplete));
+        return currentFade;
     }
 
     private IEnumerator FadeRoutine(List<GameObject> objects, bool fadeIn, Action onComplete)
@@ -25,8 +30,8 @@ public class UIFadeController : MonoBehaviour
         float duration = fadeIn ? fadeInDuration : fadeOutDuration;
         AnimationCurve curve = fadeIn ? fadeInCurve : fadeOutCurve;
 
-        List<Graphic> graphics = new List<Graphic>();
-        List<Transform> transforms = new List<Transform>();
+        List<Graphic> graphics = new();
+        List<Transform> transforms = new();
 
         foreach (var go in objects)
         {
@@ -35,34 +40,40 @@ public class UIFadeController : MonoBehaviour
             if (fadeIn) go.SetActive(true);
         }
 
+        float targetAlpha = fadeIn ? 1f : 0f;
+        float startAlpha = currentAlpha;
+
+        float alphaDistance = Mathf.Abs(targetAlpha - startAlpha);
+        float adjustedDuration = duration * alphaDistance;
+
         float time = 0f;
-        while (time < duration)
+        while (time < adjustedDuration)
         {
             time += Time.unscaledDeltaTime;
-            float t = curve.Evaluate(time / duration);
-            float alpha = fadeIn ? t : 1f - t;
+            float t = curve.Evaluate(time / adjustedDuration);
+            currentAlpha = Mathf.Lerp(startAlpha, targetAlpha, t);
 
             foreach (var g in graphics)
             {
                 Color c = g.material.color;
-                c.a = alpha;
+                c.a = currentAlpha;
                 g.material.color = c;
             }
 
             if (enableScaleEffect)
             {
-                Vector3 scale = Vector3.Lerp(scaleFrom, scaleTo, alpha);
+                Vector3 scale = Vector3.Lerp(scaleFrom, scaleTo, currentAlpha);
                 foreach (var tr in transforms) tr.localScale = scale;
             }
 
             yield return null;
         }
 
-        float finalAlpha = fadeIn ? 1f : 0f;
+        currentAlpha = targetAlpha;
         foreach (var g in graphics)
         {
             Color c = g.material.color;
-            c.a = finalAlpha;
+            c.a = currentAlpha;
             g.material.color = c;
         }
 
@@ -72,5 +83,6 @@ public class UIFadeController : MonoBehaviour
         }
 
         onComplete?.Invoke();
+        currentFade = null;
     }
 }

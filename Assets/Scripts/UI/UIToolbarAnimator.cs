@@ -4,13 +4,18 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(RectTransform))]
 public class UIToolbarAnimator : MonoBehaviour
 {
-    [Header("Hover Settings")]
-    [SerializeField] private float baseScreenEdgeTriggerHeight = 50f;
+    [Header("Hover / Touch Settings")]
+    [SerializeField] private float baseScreenEdgeTriggerWidth = 50f;
     [SerializeField] private float moveDuration = 0.5f;
     [SerializeField] private float baseHideDelay = 0.05f;
     [SerializeField] private float maxHideDelay = 5f;
     [SerializeField] private float decayRate = 1f;
     [SerializeField] private float speedThreshold = 250f;
+    [SerializeField] private float doubleTapMaxTime = 0.3f;
+
+    [Header("Positions")]
+    [SerializeField] private Vector2 visibleOffset = Vector2.zero;
+    [SerializeField] private Vector2 hiddenOffset = new(300f, 0);
 
     private RectTransform toolbar;
     private Vector2 visiblePos, hiddenPos, startPos;
@@ -25,7 +30,9 @@ public class UIToolbarAnimator : MonoBehaviour
     private float currentMouseSpeed;
     private float exitSpeed = 0f;
     private bool wasHovering = false;
-    private float currentTriggerHeight;
+    private float currentTriggerWidth;
+
+    private float lastTapTime = -1f;
 
     void Awake()
     {
@@ -35,17 +42,25 @@ public class UIToolbarAnimator : MonoBehaviour
 
     void Update()
     {
-        UpdateToolbarPosition(UIManager.shouldShow);
+        bool forceShow = false;
+
+#if UNITY_EDITOR || UNITY_STANDALONE
+        forceShow = UIManager.shouldShow;
+#else
+        forceShow = CheckMobileDoubleTap();
+#endif
+
+        UpdateToolbarPosition(forceShow);
     }
 
     void Initialize()
     {
-        visiblePos = toolbar.anchoredPosition;
-        hiddenPos = visiblePos + new Vector2(0, toolbar.rect.height);
+        visiblePos = visibleOffset;
+        hiddenPos = hiddenOffset;
         toolbar.anchoredPosition = hiddenPos;
         startPos = hiddenPos;
         currentHideDelay = baseHideDelay;
-        currentTriggerHeight = baseScreenEdgeTriggerHeight;
+        currentTriggerWidth = baseScreenEdgeTriggerWidth;
 
         if (Mouse.current != null)
         {
@@ -58,16 +73,15 @@ public class UIToolbarAnimator : MonoBehaviour
     {
         bool hover = false;
 
-        if (Mouse.current != null)
-        {
-            Vector2 currentMousePos = Mouse.current.position.ReadValue();
-            hover = CheckHover(currentMousePos);
-            CalculateMouseSpeed(currentMousePos);
-            UpdateExitSpeed(hover);
+#if UNITY_EDITOR || UNITY_STANDALONE
+        Vector2 currentMousePos = Mouse.current.position.ReadValue();
+        hover = CheckHover(currentMousePos);
+        CalculateMouseSpeed(currentMousePos);
+        UpdateExitSpeed(hover);
 
-            float deltaTime = Time.unscaledDeltaTime;
-            UpdateHoverAccum(deltaTime, hover);
-        }
+        float deltaTime = Time.unscaledDeltaTime;
+        UpdateHoverAccum(deltaTime, hover);
+#endif
 
         bool targetShow = forceShow || hover || (Time.unscaledTime - lastHoverTime <= currentHideDelay);
 
@@ -87,9 +101,9 @@ public class UIToolbarAnimator : MonoBehaviour
 
     private bool CheckHover(Vector2 pos)
     {
-        bool nearTop = pos.y > Screen.height - currentTriggerHeight;
+        bool nearRight = pos.x > Screen.width - currentTriggerWidth;
         bool overToolbar = RectTransformUtility.RectangleContainsScreenPoint(toolbar, pos);
-        return nearTop || overToolbar;
+        return nearRight || overToolbar;
     }
 
     private void CalculateMouseSpeed(Vector2 currentPos)
@@ -145,5 +159,35 @@ public class UIToolbarAnimator : MonoBehaviour
     float GetSpeedAdjustedDecayRate(float speed)
     {
         return speed < speedThreshold ? decayRate * 0.5f : decayRate * 2f;
+    }
+
+    private bool CheckMobileDoubleTap()
+    {
+        if (Touchscreen.current == null || Touchscreen.current.touches.Count == 0)
+            return false;
+
+        var touch = Touchscreen.current.touches[0];
+        if (!touch.press.isPressed) return false;
+
+        float currentTime = Time.unscaledTime;
+        if (lastTapTime < 0f)
+        {
+            lastTapTime = currentTime;
+            return false;
+        }
+
+        if (currentTime - lastTapTime <= doubleTapMaxTime)
+        {
+            lastTapTime = -1f;
+            Vector2 pos = touch.position.ReadValue();
+            if (pos.x > Screen.width - currentTriggerWidth)
+            {
+                Handheld.Vibrate();
+                return true;
+            }
+        }
+
+        lastTapTime = currentTime;
+        return false;
     }
 }
