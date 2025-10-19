@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Switcher
-  m_Shader: {fileID: 4800000, guid: 6b8e5e95a65a54cbabf74e3e4c3f2634, type: 3}
+  m_Name: ShadowForCircles
+  m_Shader: {fileID: 4800000, guid: 83116b51e59004aab945f17677849e5b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -42,10 +42,14 @@ Material:
     m_Ints: []
     m_Floats:
     - _EnableExternalAlpha: 0
-    - _Radius: 0.1
+    - _Radius: 0.247
+    - _ShadowBlur: 0.04
+    - _ShadowSmoothness: 0.5
     - _ZWrite: 0
     m_Colors:
-    - _Color: {r: 0.6462264, g: 1, b: 0.99314183, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ShadowColor: {r: 0, g: 0, b: 0, a: 0.5}
+    - _ShadowOffset: {r: 0.02, g: -0.02, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -45,7 +45,7 @@ Material:
     - _Radius: 0.5
     - _ZWrite: 0
     m_Colors:
-    - _Color: {r: 0.3301654, g: 0.3301654, b: 0.3301654, a: 0.39215687}
+    - _Color: {r: 0.33016536, g: 0.33016536, b: 0.33016536, a: 0.74509805}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

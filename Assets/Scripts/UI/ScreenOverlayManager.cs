@@ -45,7 +45,6 @@ public class ScreenOverlayManager : MonoBehaviour
     void Update()
     {
         mainCamera = Camera.main;
-
         UpdateOverlayPosition();
     }
 }

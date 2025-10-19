@@ -1,42 +1,32 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AnimManager : MonoBehaviour
+public class UIAnimCoordinator : MonoBehaviour
 {
     public static bool isLowQuality = false;
 
     [Header("References")]
-    public UiManager uiManager;
-    public FadeController fadeController;
-    public RectTransform toolbar;
-    public ToolbarHoverController hoverController;
+    public UIManager rootManager;
+    public UIFadeController fadeController;
+    public UIToolbarAnimator toolbarAnimator;
 
-    [SerializeField] private float menuExtraDelay = 1f;
+    public float menuExtraDelay = 1f;
+
     private float lastCloseTime = -Mathf.Infinity;
     private bool lastMenuOpen = false;
 
-    private void Awake()
-    {
-        if (toolbar && hoverController)
-            hoverController.Initialize(toolbar);
-    }
-
     private void Update()
     {
-        if (!uiManager) return;
-
-        bool menuOpen = uiManager.IsAnyMenuOpen;
+        bool menuOpen = rootManager.IsAnyMenuOpen;
 
         if (isLowQuality)
         {
-            // 低画质模式，简单 alpha 显示 toolbar 内部元素
-            hoverController.UpdateToolbarPosition(menuOpen);
+            toolbarAnimator.SetVisible(menuOpen);
             return;
         }
 
-        // 只对 toolbar 内部元素 Fade，不改父物体
         var fadeTargets = new List<GameObject>();
-        foreach (Transform child in toolbar)
+        foreach (Transform child in toolbarAnimator.transform)
             fadeTargets.Add(child.gameObject);
 
         if (lastMenuOpen && !menuOpen)
@@ -52,6 +42,6 @@ public class AnimManager : MonoBehaviour
         lastMenuOpen = menuOpen;
 
         bool forceShow = menuOpen || (Time.time - lastCloseTime < menuExtraDelay);
-        hoverController.UpdateToolbarPosition(forceShow);
+        toolbarAnimator.SetVisible(forceShow);
     }
 }

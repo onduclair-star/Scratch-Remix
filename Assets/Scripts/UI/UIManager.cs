@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-public class UiManager : MonoBehaviour
+public class UIManager : MonoBehaviour
 {
-    [Header("Menus")]
-    [SerializeField] private MenuView engineMenu;
-    [SerializeField] private MenuView windowMenu;
+    public MenuView engineMenu;
+    public MenuView windowMenu;
 
     [System.Serializable]
     public class AreaPair
@@ -14,8 +14,7 @@ public class UiManager : MonoBehaviour
         public GameObject background;
     }
 
-    [Header("Areas")]
-    [SerializeField] private AreaPair[] areas;
+    public AreaPair[] areas;
 
     public bool IsAnyMenuOpen => engineMenu.IsVisible || windowMenu.IsVisible;
 
@@ -35,9 +34,16 @@ public class UiManager : MonoBehaviour
     {
         foreach (var a in areas)
         {
-            bool active = a.name == name;
-            if (a.area) a.area.SetActive(active);
-            if (a.background) a.background.SetActive(active);
+            a.area.SetActive(a.name == name);
+            a.background.SetActive(a.name == name);
         }
+    }
+
+    public List<GameObject> GetAllFadeObjects()
+    {
+        List<GameObject> result = new List<GameObject>();
+        result.AddRange(engineMenu.fadeObjects);
+        result.AddRange(windowMenu.fadeObjects);
+        return result;
     }
 }
