@@ -1593,7 +1593,6 @@ GameObject:
   - component: {fileID: 699512878}
   - component: {fileID: 699512879}
   - component: {fileID: 699512882}
-  - component: {fileID: 699512884}
   - component: {fileID: 699512883}
   m_Layer: 0
   m_Name: UIManager
@@ -1722,71 +1721,6 @@ MonoBehaviour:
   - name: Sounds
     area: {fileID: 315058524}
     background: {fileID: 1203250818}
---- !u!114 &699512884
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 699512877}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4dd9f7a366da4e6a8c0eaa54f4ff590, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UIFadeController
-  fadeInDuration: 0.3
-  fadeOutDuration: 0.25
-  fadeInCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  fadeOutCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  enableScaleEffect: 1
-  scaleFrom: {x: 0.8, y: 0.8}
-  scaleTo: {x: 1, y: 1}
 --- !u!1 &722445960 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9211392182186122663, guid: dcd2213f41d7b417f87993d8c30e9679, type: 3}
@@ -2281,8 +2215,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: UIRootManager, Assembly-CSharp
+      - m_Target: {fileID: 699512883}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
         m_MethodName: ToggleEngineMenu
         m_Mode: 1
         m_Arguments:
@@ -6071,8 +6005,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: UIRootManager, Assembly-CSharp
+      - m_Target: {fileID: 699512883}
+        m_TargetAssemblyTypeName: UIManager, Assembly-CSharp
         m_MethodName: ToggleWindowMenu
         m_Mode: 1
         m_Arguments:

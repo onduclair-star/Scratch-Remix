@@ -25,18 +25,14 @@ public class UIAnimCoordinator : MonoBehaviour
             return;
         }
 
-        var fadeTargets = new List<GameObject>();
-        foreach (Transform child in toolbarAnimator.transform)
-            fadeTargets.Add(child.gameObject);
-
         if (lastMenuOpen && !menuOpen)
         {
             lastCloseTime = Time.time;
-            fadeController.Fade(fadeTargets, false);
+            fadeController.Fade(toolbarAnimator.transform, false);
         }
         else if (!lastMenuOpen && menuOpen)
         {
-            fadeController.Fade(fadeTargets, true);
+            fadeController.Fade(toolbarAnimator.transform, true);
         }
 
         lastMenuOpen = menuOpen;

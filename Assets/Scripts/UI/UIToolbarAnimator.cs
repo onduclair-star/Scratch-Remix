@@ -6,7 +6,7 @@ public class UIToolbarAnimator : MonoBehaviour
 {
     [Header("Positions")]
     public Vector3 hiddenPos = new Vector3(0, 375, 0);
-    public Vector3 visiblePos = new Vector3(0, -314, 0);
+    public Vector3 visiblePos = new Vector3(0, 314, 0);
     public float moveDuration = 0.3f;
 
     [Header("Cursor Trigger Settings")]
