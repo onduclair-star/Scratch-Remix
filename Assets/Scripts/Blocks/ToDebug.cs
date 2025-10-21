@@ -1,5 +1,7 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
@@ -21,10 +23,25 @@ public class ToDebug : MonoBehaviour
 
     IEnumerator StartRunning()
     {
-        int index = 1;
-        while (index < transform.childCount)
+        var startTime = Time.time;
+        float currentTime = 0f;
+        while (currentTime - startTime < 0.5f)
         {
-            var signalObj = transform.GetChild(index).GetChild(1).gameObject;
+            currentTime = Time.time;
+            if (Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                yield break;
+            }
+            else
+            {
+                yield return null;
+            }
+        }
+
+        int index = 1;
+        while (index < transform.GetChild(1).childCount)
+        {
+            var signalObj = transform.GetChild(1).GetChild(index).GetChild(1).gameObject;
             signalObj.SetActive(true);
 
             while (signalObj.activeSelf)

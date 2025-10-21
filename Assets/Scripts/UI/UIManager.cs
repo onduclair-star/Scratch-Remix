@@ -81,12 +81,4 @@ public class UIManager : MonoBehaviour
             a.background.SetActive(a.name == name);
         }
     }
-
-    public List<GameObject> GetAllFadeObjects()
-    {
-        List<GameObject> result = new();
-        result.AddRange(engineMenu.fadeObjects);
-        result.AddRange(windowMenu.fadeObjects);
-        return result;
-    }
 }
