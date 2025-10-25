@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -30,6 +31,15 @@ public class UIManager : MonoBehaviour
             if (!IsPointerOverUI())
             {
                 shouldShow = false;
+                if (engineMenu.IsVisible)
+                {
+                    ToggleEngineMenu();
+                }
+
+                if (windowMenu.IsVisible)
+                {
+                    ToggleWindowMenu();
+                }
             }
         }
     }
@@ -63,14 +73,14 @@ public class UIManager : MonoBehaviour
 
     public void ToggleEngineMenu()
     {
-        if (engineMenu.IsVisible) engineMenu.Hide();
-        else engineMenu.Show();
+        if (engineMenu.IsVisible) engineMenu.Hide(onComplete: () => { engineMenu.transform.GetChild(1).gameObject.SetActive(false); });
+        else engineMenu.Show(onComplete: () => { engineMenu.transform.GetChild(1).gameObject.SetActive(true); });
     }
 
     public void ToggleWindowMenu()
     {
-        if (windowMenu.IsVisible) windowMenu.Hide();
-        else windowMenu.Show();
+        if (windowMenu.IsVisible) windowMenu.Hide(onComplete: () => { windowMenu.transform.GetChild(1).gameObject.SetActive(false); });
+        else windowMenu.Show(onComplete: () => { windowMenu.transform.GetChild(1).gameObject.SetActive(true); });
     }
 
     public void ShowArea(string name)

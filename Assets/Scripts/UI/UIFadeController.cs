@@ -18,11 +18,74 @@ public class UIFadeController : MonoBehaviour
     private Coroutine currentFade;
     private float currentAlpha = 0f;
 
-    public Coroutine Fade(List<GameObject> objects, bool fadeIn, Action onComplete = null)
+    public Coroutine Fade(List<GameObject> objects, bool fadeIn, Action onComplete = null, bool canvasGroup = true)
     {
         if (currentFade != null) StopCoroutine(currentFade);
-        currentFade = StartCoroutine(FadeRoutine(objects, fadeIn, onComplete));
+
+        if (canvasGroup)
+        {
+            currentFade = StartCoroutine(FadeCanvasRoutine(objects, fadeIn, onComplete));
+        }
+        else
+        {
+            currentFade = StartCoroutine(FadeRoutine(objects, fadeIn, onComplete));
+        }
+
         return currentFade;
+    }
+
+    private IEnumerator FadeCanvasRoutine(List<GameObject> objects, bool fadeIn, Action onComplete)
+    {
+        if (objects == null || objects.Count == 0)
+            yield break;
+
+        GameObject go = objects[0];
+
+        if (!go.TryGetComponent(out CanvasGroup cg))
+        {
+            cg = go.AddComponent<CanvasGroup>();
+        }
+
+        if (fadeIn) go.SetActive(true);
+
+        float duration = fadeIn ? fadeInDuration : fadeOutDuration;
+        AnimationCurve curve = fadeIn ? fadeInCurve : fadeOutCurve;
+
+        float startAlpha = currentAlpha;
+        float targetAlpha = fadeIn ? 1f : 0f;
+
+        float alphaDistance = Mathf.Abs(targetAlpha - startAlpha);
+        float adjustedDuration = duration * alphaDistance;
+
+        float time = 0f;
+        Transform tr = go.transform;
+
+        while (time < adjustedDuration)
+        {
+            time += Time.unscaledDeltaTime;
+            float t = curve.Evaluate(time / adjustedDuration);
+            currentAlpha = Mathf.Lerp(startAlpha, targetAlpha, t);
+
+            cg.alpha = currentAlpha;
+
+            if (enableScaleEffect)
+            {
+                Vector3 scale = Vector3.Lerp(scaleFrom, scaleTo, currentAlpha);
+                tr.localScale = scale;
+            }
+
+            yield return null;
+        }
+
+        cg.alpha = currentAlpha = targetAlpha;
+
+        if (!fadeIn)
+        {
+            go.SetActive(false);
+        }
+
+        onComplete?.Invoke();
+        currentFade = null;
     }
 
     private IEnumerator FadeRoutine(List<GameObject> objects, bool fadeIn, Action onComplete)

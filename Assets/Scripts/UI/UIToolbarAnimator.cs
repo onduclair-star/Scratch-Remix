@@ -1,9 +1,18 @@
+#if UNITY_IOS || UNITY_ANDROID
+    #define MOBILE
+#endif
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(RectTransform))]
 public class UIToolbarAnimator : MonoBehaviour
 {
+#if MOBILE
+    [SerializeField] private float doubleTapMaxTime = 0.3f;
+    private float lastTapTime = -1f;
+#endif
+
     [Header("Hover / Touch Settings")]
     [SerializeField] private float baseScreenEdgeTriggerWidth = 50f;
     [SerializeField] private float moveDuration = 0.5f;
@@ -11,7 +20,6 @@ public class UIToolbarAnimator : MonoBehaviour
     [SerializeField] private float maxHideDelay = 5f;
     [SerializeField] private float decayRate = 1f;
     [SerializeField] private float speedThreshold = 250f;
-    [SerializeField] private float doubleTapMaxTime = 0.3f;
 
     [Header("Positions")]
     [SerializeField] private Vector2 visibleOffset = Vector2.zero;
@@ -19,7 +27,7 @@ public class UIToolbarAnimator : MonoBehaviour
 
     private RectTransform toolbar;
     private Vector2 visiblePos, hiddenPos, startPos;
-    private bool shouldShow = false;
+    private bool shouldShow = false, forceShow;
     private float moveTimer = 0f;
 
     private float hoverAccum = 0f;
@@ -32,8 +40,6 @@ public class UIToolbarAnimator : MonoBehaviour
     private bool wasHovering = false;
     private float currentTriggerWidth;
 
-    private float lastTapTime = -1f;
-
     void Awake()
     {
         toolbar = GetComponent<RectTransform>();
@@ -42,12 +48,10 @@ public class UIToolbarAnimator : MonoBehaviour
 
     void Update()
     {
-        bool forceShow = false;
-
-#if UNITY_EDITOR || UNITY_STANDALONE
-        forceShow = UIManager.shouldShow;
-#else
+#if MOBILE
         forceShow = CheckMobileDoubleTap();
+#else
+        forceShow = UIManager.shouldShow;
 #endif
 
         UpdateToolbarPosition(forceShow);
@@ -73,7 +77,7 @@ public class UIToolbarAnimator : MonoBehaviour
     {
         bool hover = false;
 
-#if UNITY_EDITOR || UNITY_STANDALONE
+#if !MOBILE
         Vector2 currentMousePos = Mouse.current.position.ReadValue();
         hover = CheckHover(currentMousePos);
         CalculateMouseSpeed(currentMousePos);
@@ -101,10 +105,11 @@ public class UIToolbarAnimator : MonoBehaviour
 
     private bool CheckHover(Vector2 pos)
     {
-        bool nearRight = pos.x > Screen.width - currentTriggerWidth;
+        bool nearBottom = pos.y < currentTriggerWidth;
         bool overToolbar = RectTransformUtility.RectangleContainsScreenPoint(toolbar, pos);
-        return nearRight || overToolbar;
+        return nearBottom || overToolbar;
     }
+
 
     private void CalculateMouseSpeed(Vector2 currentPos)
     {
@@ -161,6 +166,7 @@ public class UIToolbarAnimator : MonoBehaviour
         return speed < speedThreshold ? decayRate * 0.5f : decayRate * 2f;
     }
 
+#if MOBILE
     private bool CheckMobileDoubleTap()
     {
         if (Touchscreen.current == null || Touchscreen.current.touches.Count == 0)
@@ -180,7 +186,7 @@ public class UIToolbarAnimator : MonoBehaviour
         {
             lastTapTime = -1f;
             Vector2 pos = touch.position.ReadValue();
-            if (pos.x > Screen.width - currentTriggerWidth)
+            if (pos.y < currentTriggerWidth)
             {
                 Handheld.Vibrate();
                 return true;
@@ -190,4 +196,6 @@ public class UIToolbarAnimator : MonoBehaviour
         lastTapTime = currentTime;
         return false;
     }
+
+#endif
 }
