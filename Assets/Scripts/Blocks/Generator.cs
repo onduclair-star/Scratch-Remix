@@ -7,7 +7,7 @@ public class Generator : MonoBehaviour
     public GameObject moveSteps, toDebug;
     public Transform parent;
 
-    public void ToDebug()
+    public void GenerateDebug()
     {
         var debug = Instantiate(toDebug, parent);
         debug.AddComponent<ToDebug>();
@@ -15,7 +15,7 @@ public class Generator : MonoBehaviour
         _ = StartCoroutine(FollowCursorTillClick(debug));
     }
 
-    public void MoveSteps()
+    public void GenerateMoveSteps()
     {
         var steps = Instantiate(moveSteps, parent);
         // steps.AddComponent<MoveSteps>();

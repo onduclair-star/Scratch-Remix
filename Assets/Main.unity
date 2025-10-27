@@ -1739,9 +1739,6 @@ MonoBehaviour:
   toolbar: {fileID: 851915252}
   engineMenu: {fileID: 944880711}
   windowMenu: {fileID: 1952312134}
-  autoMenus:
-  - {fileID: 1010704389}
-  - {fileID: 1143180953}
   areas:
   - name: Code
     area: {fileID: 1964039900}
@@ -1788,7 +1785,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!114 &722445964
+--- !u!114 &722445967
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1834,14 +1831,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 699512884}
         m_TargetAssemblyTypeName: Generator, Assembly-CSharp
-        m_MethodName: ToDebug
+        m_MethodName: GenerateDebug
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: Debug
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &817262600
@@ -2666,7 +2663,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
---- !u!114 &1029796437
+--- !u!114 &1029796440
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2712,14 +2709,14 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 699512884}
         m_TargetAssemblyTypeName: Generator, Assembly-CSharp
-        m_MethodName: MoveSteps
+        m_MethodName: GenerateMoveSteps
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: MoveSteps
+          m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &1083540522
@@ -3577,7 +3574,7 @@ GameObject:
   - component: {fileID: 1295858690}
   - component: {fileID: 1295858689}
   m_Layer: 5
-  m_Name: Blocks
+  m_Name: BlockSamples
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6808,7 +6805,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 9211392182186122663, guid: dcd2213f41d7b417f87993d8c30e9679, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 722445964}
+      addedObject: {fileID: 722445967}
   m_SourcePrefab: {fileID: 100100000, guid: dcd2213f41d7b417f87993d8c30e9679, type: 3}
 --- !u!1001 &4362783918832824194
 PrefabInstance:
@@ -6908,7 +6905,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2501102748044852218, guid: 9634b4a3b03d94a98b58d3012a29d081, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1029796437}
+      addedObject: {fileID: 1029796440}
   m_SourcePrefab: {fileID: 100100000, guid: 9634b4a3b03d94a98b58d3012a29d081, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
