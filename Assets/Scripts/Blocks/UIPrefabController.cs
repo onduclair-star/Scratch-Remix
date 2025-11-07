@@ -12,7 +12,7 @@ public class UIPrefabController : MonoBehaviour, IBeginDragHandler, IDragHandler
 
     private UIPrefabController currentSnapTarget;
 
-    private const float snapOffset = 30f;
+    public const float snapOffset = 30f;
     private const float xThreshold = 25f;
     private const float snapThreshold = 45f;
 
@@ -20,25 +20,32 @@ public class UIPrefabController : MonoBehaviour, IBeginDragHandler, IDragHandler
     {
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
+        if (canvas == null)
+        {
+            Debug.LogError("UIPrefabController could not find a parent Canvas!");
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        rectTransform.SetAsLastSibling();
         CreateGhost();
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        // 本体跟随鼠标（自由拖）
+        if (canvas == null) return;
+
+        Camera cam = (canvas.renderMode == RenderMode.ScreenSpaceOverlay) ? null : canvas.worldCamera;
+
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             rectTransform.parent as RectTransform,
             eventData.position,
-            canvas.worldCamera,
+            cam,
             out Vector2 localPoint
         );
         rectTransform.anchoredPosition = localPoint;
 
-        // 逻辑：根据距离寻找吸附目标
         DetectSnapTarget();
         PreviewGhost();
     }
@@ -47,21 +54,14 @@ public class UIPrefabController : MonoBehaviour, IBeginDragHandler, IDragHandler
     {
         DestroyGhost();
 
-        if (currentSnapTarget != null)
+        if (currentSnapTarget != null && canvas != null)
         {
-            // 贴上真实位置
-            SnapToTarget(currentSnapTarget);
-
-            // 走你自己的父逻辑
             ParentChainManager.AssignParent(this, currentSnapTarget, snapOffset);
         }
 
         currentSnapTarget = null;
     }
 
-    // ---------------------------
-    // Ghost 逻辑
-    // ---------------------------
     private void CreateGhost()
     {
         ghostObject = Instantiate(gameObject, rectTransform.parent);
@@ -69,10 +69,19 @@ public class UIPrefabController : MonoBehaviour, IBeginDragHandler, IDragHandler
         DestroyImmediate(ghostObject.GetComponent<UIPrefabController>());
 
         ghostRect = ghostObject.GetComponent<RectTransform>();
+        ghostRect.anchoredPosition = rectTransform.anchoredPosition;
 
         var cg = ghostObject.AddComponent<CanvasGroup>();
         cg.alpha = 0.6f;
         cg.blocksRaycasts = false;
+
+        var interactables = ghostObject.GetComponentsInChildren<UnityEngine.UI.Selectable>();
+        foreach (var selectable in interactables)
+        {
+            selectable.interactable = false;
+        }
+
+        ghostObject.SetActive(false);
     }
 
     private void DestroyGhost()
@@ -92,52 +101,62 @@ public class UIPrefabController : MonoBehaviour, IBeginDragHandler, IDragHandler
         if (currentSnapTarget != null)
         {
             RectTransform targetRect = currentSnapTarget.GetComponent<RectTransform>();
-            ghostRect.position = new Vector3(
-                targetRect.position.x,
-                targetRect.position.y - snapOffset,
-                targetRect.position.z
+
+            if (ghostRect.parent != rectTransform.parent)
+            {
+                ghostRect.SetParent(rectTransform.parent, false);
+            }
+
+            float idealSnapY = targetRect.anchoredPosition.y - snapOffset;
+
+            ghostRect.anchoredPosition = new Vector2(
+                targetRect.anchoredPosition.x,
+                idealSnapY
             );
             ghostObject.SetActive(true);
         }
-        else ghostObject.SetActive(false);
-    }
-
-    // ---------------------------
-    // 距离吸附逻辑（核心修复点）
-    // ---------------------------
-    private void DetectSnapTarget()
-    {
-        currentSnapTarget = null;
-
-        var allBlocks = FindObjectsByType<UIPrefabController>(FindObjectsSortMode.None);
-        float bestYDistance = snapThreshold;
-
-        foreach (var block in allBlocks)
+        else
         {
-            if (block == this) continue;
-
-            float dx = Mathf.Abs(block.rectTransform.position.x - rectTransform.position.x);
-            float dy = rectTransform.position.y - block.rectTransform.position.y;
-
-            // 只吸附“其下方的积木”，并且 X 方向基本对齐，且距离足够近
-            if (dx < xThreshold && dy > 0 && dy < bestYDistance)
-            {
-                bestYDistance = dy;
-                currentSnapTarget = block;
-            }
+            ghostObject.SetActive(false);
         }
     }
 
-    // ---------------------------
-    // 真实 Snap（松手后执行）
-    // ---------------------------
-    private void SnapToTarget(UIPrefabController target)
+    private void DetectSnapTarget()
     {
-        RectTransform targetRect = target.GetComponent<RectTransform>();
-        rectTransform.position = new Vector3(
-            targetRect.position.x,
-            targetRect.position.y - snapOffset,
-            rectTransform.position.z
-        );
+        currentSnapTarget = null;
+        var allBlocks = FindObjectsByType<UIPrefabController>(FindObjectsSortMode.None);
+        float bestSnapDistance = snapThreshold;
+
+        Vector3[] draggingCorners = new Vector3[4];
+        rectTransform.GetWorldCorners(draggingCorners);
+        Vector3 draggingBottomWorldPosition = (draggingCorners[0] + draggingCorners[3]) / 2f;
+
+
+        foreach (var block in allBlocks)
+        {
+            if (block == this || block.transform.IsChildOf(rectTransform)) continue;
+
+            RectTransform targetRect = block.rectTransform;
+
+            Vector3[] targetCorners = new Vector3[4];
+            targetRect.GetWorldCorners(targetCorners);
+            Vector3 targetBottomWorldPosition = (targetCorners[0] + targetCorners[3]) / 2f;
+
+            float idealSnapWorldY = targetBottomWorldPosition.y - snapOffset * targetRect.lossyScale.y;
+
+            float dx = Mathf.Abs(targetRect.position.x - rectTransform.position.x);
+            if (dx > xThreshold) continue;
+
+            float dyDistance = Mathf.Abs(draggingBottomWorldPosition.y - idealSnapWorldY);
+
+            if (dyDistance < bestSnapDistance)
+            {
+                if (targetRect.position.y > rectTransform.position.y)
+                {
+                    bestSnapDistance = dyDistance;
+                    currentSnapTarget = block;
+                }
+            }
+        }
     }
 }

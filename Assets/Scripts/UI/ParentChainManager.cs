@@ -1,11 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 单独负责父链管理逻辑（Debug 优先 / Null Parent 管理 / 提升子物体逻辑）
-/// - Null Parent 名称： "Null Parent"
-/// - AssignParent(dragging, target, verticalOffset) 会按照你制定的规则完成父子关系变化并对齐位置
-/// </summary>
 public static class ParentChainManager
 {
     private const string NULL_PARENT_NAME = "Null Parent";
@@ -14,40 +9,94 @@ public static class ParentChainManager
     {
         if (dragging == null || target == null) return;
 
-        // 规则 1：目标是 Debug → Debug 直接成为父物体
+        Transform newParentTransform;
+
         if (IsDebug(target.gameObject))
         {
-            AttachToParent(dragging, target.transform, target, verticalOffset);
-            return;
+            newParentTransform = target.transform;
+        }
+        else
+        {
+            Transform debugAncestor = FindAncestorWithDebug(target.transform);
+            if (debugAncestor != null)
+            {
+                newParentTransform = debugAncestor;
+                TryDissolveNullParentToDebug(debugAncestor);
+            }
+            else
+            {
+                GameObject nullParent = FindOrCreateNullParent(dragging);
+                newParentTransform = nullParent.transform;
+            }
         }
 
-        // 规则 2：目标不是 Debug → 查找 Debug 祖先
-        Transform debugAncestor = FindAncestorWithDebug(target.transform);
-        if (debugAncestor != null)
+        dragging.transform.SetParent(newParentTransform, true);
+
+        if (newParentTransform != target.transform && target.transform.parent != newParentTransform)
         {
-            AttachToParent(dragging, debugAncestor, target, verticalOffset);
-            TryDissolveNullParentToDebug(debugAncestor);
-            return;
+            target.transform.SetParent(newParentTransform, true);
         }
 
-        // 规则 3：无 Debug → 使用 Null Parent
-        GameObject nullParent = FindOrCreateNullParent(dragging);
+        AttachToParent(dragging, target, verticalOffset);
 
-        // dragging 进入 Null Parent
-        AttachToParent(dragging, nullParent.transform, target, verticalOffset);
+        dragging.GetComponent<RectTransform>().SetAsLastSibling();
+    }
 
-        // target 也要在 Null Parent 下（若还不是的话）
-        if (target.transform.parent != nullParent.transform)
+    private static void AttachToParent(UIPrefabController dragging, UIPrefabController target, float verticalOffset)
+    {
+        RectTransform childRect = dragging.GetComponent<RectTransform>();
+        RectTransform targetRect = target.GetComponent<RectTransform>();
+        RectTransform newParentRect = childRect.parent as RectTransform;
+        Canvas canvas = dragging.GetComponentInParent<Canvas>();
+
+        if (newParentRect == null || canvas == null) return;
+
+        Camera cam = (canvas.renderMode != RenderMode.ScreenSpaceOverlay) ? canvas.worldCamera : null;
+
+        Vector3[] targetCorners = new Vector3[4];
+        targetRect.GetWorldCorners(targetCorners);
+        Vector3 targetBottomCenterWorldPosition = (targetCorners[0] + targetCorners[3]) / 2f;
+
+        float draggingHalfWorldHeight = childRect.rect.height * childRect.lossyScale.y / 2f;
+
+        Vector3 desiredWorldPosition = targetRect.position;
+
+        desiredWorldPosition.y = targetBottomCenterWorldPosition.y
+                                 - verticalOffset * targetRect.lossyScale.y
+                                 + draggingHalfWorldHeight;
+
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, desiredWorldPosition);
+
+        Vector2 finalLocalPoint;
+
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                newParentRect,
+                screenPoint,
+                cam,
+                out finalLocalPoint))
         {
-            Vector3 targetWorld = target.GetComponent<RectTransform>().position;
-            target.transform.SetParent(nullParent.transform, false);
-            target.transform.position = targetWorld;
+            Vector2 targetLocalPoint;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    newParentRect,
+                    RectTransformUtility.WorldToScreenPoint(cam, targetRect.position),
+                    cam,
+                    out targetLocalPoint))
+            {
+                Debug.LogError("[ParentChainManager] FAILED to calculate target X base, using calculated X!");
+                targetLocalPoint.x = finalLocalPoint.x;
+            }
+
+            childRect.anchoredPosition = new Vector2(
+                targetLocalPoint.x,
+                finalLocalPoint.y
+            );
+        }
+        else
+        {
+            Debug.LogError("[ParentChainManager] Failed to convert desired World Point to Local Point!");
         }
     }
 
-    // -------------------------
-    // Helpers
-    // -------------------------
 
     private static bool IsDebug(GameObject go)
     {
@@ -72,28 +121,22 @@ public static class ParentChainManager
         if (existing != null) return existing;
 
         Transform root = null;
-        if (anyBlock != null && anyBlock.GetComponentInParent<Canvas>() != null)
+        Canvas canvas = anyBlock != null ? anyBlock.GetComponentInParent<Canvas>() : null;
+        if (canvas != null)
         {
-            root = anyBlock.GetComponentInParent<Canvas>().transform;
+            root = canvas.transform;
         }
 
         GameObject go = new(NULL_PARENT_NAME);
         if (root != null) go.transform.SetParent(root, false);
 
+        RectTransform rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.sizeDelta = Vector2.zero;
+        rt.localPosition = Vector3.zero;
+
         return go;
-    }
-
-    private static void AttachToParent(UIPrefabController dragging, Transform parentTransform, UIPrefabController target, float verticalOffset)
-    {
-        RectTransform childRect = dragging.GetComponent<RectTransform>();
-        RectTransform targetRect = target.GetComponent<RectTransform>();
-
-        Vector3 targetWorld = targetRect.position;
-        Vector3 childWorld = childRect.position;
-        Vector3 desiredWorld = new(childWorld.x, targetWorld.y - verticalOffset, childWorld.z);
-
-        childRect.SetParent(parentTransform, false);
-        childRect.position = desiredWorld;
     }
 
     private static void TryDissolveNullParentToDebug(Transform debugAncestor)
@@ -101,21 +144,19 @@ public static class ParentChainManager
         GameObject nullParentGO = GameObject.Find(NULL_PARENT_NAME);
         if (nullParentGO == null) return;
 
-        if (nullParentGO.transform.childCount == 0)
+        List<Transform> children = new();
+        foreach (Transform ch in nullParentGO.transform)
+            children.Add(ch);
+
+        if (children.Count == 0)
         {
             Object.Destroy(nullParentGO);
             return;
         }
 
-        List<Transform> children = new();
-        foreach (Transform ch in nullParentGO.transform)
-            children.Add(ch);
-
         foreach (var ch in children)
         {
-            Vector3 worldPos = ch.position;
-            ch.SetParent(debugAncestor, false);
-            ch.position = worldPos;
+            ch.SetParent(debugAncestor, true);
         }
 
         Object.Destroy(nullParentGO);

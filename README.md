@@ -59,5 +59,5 @@ Non-commercial. For commercial licensing, contact: **onduclair@gmail.com**
 ---
 
 ## 现状 / Status
-一人开发，暂停中（作者被创飞了...），2026 年 MVP 见！  
-Solo dev, paused for life stuff(the author -> ☠️), MVP by 2026!
+持续更新中... :)
+Keeping upgrading... :)
