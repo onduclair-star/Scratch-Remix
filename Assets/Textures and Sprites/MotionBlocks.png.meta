@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 60d72b536a28f439ca2daf94bcebbc62
+guid: 0db8e0c8c7493462bad4cf83e00b4065
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7907644863731263468
-    second: MotionBlock_0
+      213: -5470431252974824672
+    second: MotionBlocks_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -110,6 +110,19 @@ TextureImporter:
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
     buildTarget: iOS
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -126,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: MotionBlock_0
+      name: MotionBlocks_0
       rect:
         serializedVersion: 2
         x: 113
         y: 289
         width: 798
-        height: 451
+        height: 450
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -141,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 4181b5794e6624290800000000000000
-      internalID: -7907644863731263468
+      spriteID: 0239d3e42cf1514b0800000000000000
+      internalID: -5470431252974824672
       vertices: []
       indices: 
       edges: []
@@ -161,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      MotionBlock_0: -7907644863731263468
+      MotionBlocks_0: -5470431252974824672
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
