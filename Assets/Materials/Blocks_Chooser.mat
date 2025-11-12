@@ -48,7 +48,7 @@ Material:
     - _Radius: 0.17
     - _ZWrite: 0
     m_Colors:
-    - _Color: {r: 0.51450694, g: 0.71044666, b: 0.8867924, a: 0.68235296}
+    - _Color: {r: 0.51450694, g: 0.71044666, b: 0.8867924, a: 1}
     - _OutlineColor: {r: 0.53813636, g: 0.8207547, b: 0.5484368, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
     - _TintColor: {r: 1, g: 1, b: 1, a: 0.19215687}

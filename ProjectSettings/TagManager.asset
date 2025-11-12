@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Debug
   - Motions
+  - Block Manager
   layers:
   - Default
   - TransparentFX

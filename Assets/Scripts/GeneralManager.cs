@@ -5,7 +5,6 @@ public class GeneralManager : MonoBehaviour
 {
     public GameObject[] highQualityGameObjects, mediumQualityGameObjects;
     public Image toolbar;
-    public GameObject bg;
     private const int DefaultRefreshRate = 60;
 
     void Awake()

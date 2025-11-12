@@ -1,3 +1,5 @@
+// Use for non-UI background images to always cover the camera view
+
 using UnityEngine;
 
 [ExecuteAlways]

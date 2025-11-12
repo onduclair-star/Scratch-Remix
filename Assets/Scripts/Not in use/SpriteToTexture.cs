@@ -1,3 +1,5 @@
+// Use to export a high-resolution texture from a sprite via a camera
+
 using UnityEngine;
 using System.IO;
 

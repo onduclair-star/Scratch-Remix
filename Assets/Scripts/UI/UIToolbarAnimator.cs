@@ -116,7 +116,8 @@ public class UIToolbarAnimator : MonoBehaviour
         float deltaTime = Time.unscaledTime - lastMouseMoveTime;
         if (deltaTime > 0.01f)
         {
-            float distance = Vector2.Distance(currentPos, lastMousePosition);
+            // Calculate distance based only on the vertical (Y) movement
+            float distance = Mathf.Abs(currentPos.y - lastMousePosition.y);
             currentMouseSpeed = distance / deltaTime;
             lastMousePosition = currentPos;
             lastMouseMoveTime = Time.unscaledTime;
