@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using SimpleFileBrowser;
 
+[RequireComponent(typeof(SpritesManager))]
 public class UIManager : MonoBehaviour
 {
     [HideInInspector]
@@ -23,6 +24,13 @@ public class UIManager : MonoBehaviour
     public AreaPair[] areas;
 
     public bool IsAnyMenuOpen => engineMenu.IsVisible || windowMenu.IsVisible;
+
+    private SpritesManager spritesManager;
+
+    void Awake()
+    {
+        spritesManager = GetComponent<SpritesManager>();
+    }
 
     void Update()
     {
@@ -101,19 +109,20 @@ public class UIManager : MonoBehaviour
         FileBrowser.SetDefaultFilter("Image Files");
 
         FileBrowser.ShowLoadDialog(
-            onSuccess: paths =>
+            onSuccess: async paths =>
             {
                 if (paths == null || paths.Length == 0) return;
+
                 foreach (var path in paths)
                 {
-                    FileImporter.ImportFile(path, ImportType.Image); 
+                    FileImporter.ImportFile(path, ImportType.Image);
                 }
+
+                await spritesManager.ReloadSprites();
             },
             onCancel: () => { },
             pickMode: FileBrowser.PickMode.Files,
             allowMultiSelection: true,
-            initialPath: null,
-            initialFilename: null,
             title: "Import Sprites",
             loadButtonText: "Import"
         );
@@ -135,6 +144,8 @@ public class UIManager : MonoBehaviour
                 {
                     FileImporter.ImportFile(path, ImportType.Audio);
                 }
+
+                // await spritesManager.ReloadAudios();
             },
             onCancel: () => { },
             pickMode: FileBrowser.PickMode.Files,

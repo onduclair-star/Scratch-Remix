@@ -1705,6 +1705,7 @@ GameObject:
   - component: {fileID: 699512882}
   - component: {fileID: 699512883}
   - component: {fileID: 699512884}
+  - component: {fileID: 699512885}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -1832,6 +1833,24 @@ MonoBehaviour:
   moveSteps: {fileID: 2501102748044852218, guid: 9634b4a3b03d94a98b58d3012a29d081, type: 3}
   toDebug: {fileID: 9211392182186122663, guid: dcd2213f41d7b417f87993d8c30e9679, type: 3}
   parent: {fileID: 48599800}
+--- !u!114 &699512885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 699512877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db47b8fe3673648aeb5feb49ad2cfed6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpritesManager
+  sprites:
+  - {fileID: 0}
+  spritesContainer: {fileID: 1435001174}
+  defaultSpriteSize: {x: 100, y: 100}
+  uiToSkip:
+  - {fileID: 1588341564}
 --- !u!1 &722445960 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9211392182186122663, guid: dcd2213f41d7b417f87993d8c30e9679, type: 3}
@@ -6602,7 +6621,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -217.49988, y: -20.999725}
+  m_AnchoredPosition: {x: -217.49982, y: -20.999725}
   m_SizeDelta: {x: -435, y: -42}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1964039902
