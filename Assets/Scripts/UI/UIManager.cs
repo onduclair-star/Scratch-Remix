@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using SimpleFileBrowser;                    // 新增：使用 SimpleFileBrowser [web:1]
+using SimpleFileBrowser;
 
 public class UIManager : MonoBehaviour
 {
@@ -92,39 +92,56 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // 使用 SimpleFileBrowser 的导入图片功能
     public void OnClickImportSprites()
     {
-        // 设置过滤器：只显示图片文件 [web:1]
         FileBrowser.SetFilters(
-            showAllFilesFilter: true,
-            new FileBrowser.Filter("Image Files", ".png", ".jpg", ".jpeg")
+            showAllFilesFilter: false,
+            new FileBrowser.Filter("Image Files", ".png", ".jpg", ".jpeg", ".bmp", ".tga")
         );
-
-        // 默认选择 Image Files 过滤器（可选）[web:1]
         FileBrowser.SetDefaultFilter("Image Files");
 
-        // 弹出“打开文件”对话框 [web:1]
         FileBrowser.ShowLoadDialog(
-            onSuccess: (string[] paths) =>
+            onSuccess: paths =>
             {
-                if (paths == null || paths.Length == 0)
-                    return;
-
+                if (paths == null || paths.Length == 0) return;
                 foreach (var path in paths)
                 {
-                    FileImporter.ImportFile(path);
+                    FileImporter.ImportFile(path, ImportType.Image); 
                 }
             },
-            onCancel: () =>
-            {
-                // 用户取消时不做任何处理即可
-            },
-            pickMode: FileBrowser.PickMode.Files,   // 只选文件 [web:1]
-            allowMultiSelection: true,              // 允许多选 [web:1]
+            onCancel: () => { },
+            pickMode: FileBrowser.PickMode.Files,
+            allowMultiSelection: true,
             initialPath: null,
             initialFilename: null,
             title: "Import Sprites",
+            loadButtonText: "Import"
+        );
+    }
+
+    public void OnClickImportAudio()
+    {
+        FileBrowser.SetFilters(
+            showAllFilesFilter: false,
+            new FileBrowser.Filter("Audio Files", ".wav", ".ogg", ".mp3", ".aiff")
+        );
+        FileBrowser.SetDefaultFilter("Audio Files");
+
+        FileBrowser.ShowLoadDialog(
+            onSuccess: paths =>
+            {
+                if (paths == null || paths.Length == 0) return;
+                foreach (var path in paths)
+                {
+                    FileImporter.ImportFile(path, ImportType.Audio);
+                }
+            },
+            onCancel: () => { },
+            pickMode: FileBrowser.PickMode.Files,
+            allowMultiSelection: true,
+            initialPath: null,
+            initialFilename: null,
+            title: "Import Audio",
             loadButtonText: "Import"
         );
     }
