@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.IO;
 using System.Linq;
+using System;
 
 public enum ImportType
 {
@@ -8,11 +9,18 @@ public enum ImportType
     Audio
 }
 
+[Serializable]
+public class FileMetadata
+{
+    public long importTimestamp;
+    public string originalName;
+}
+
 public static class FileImporter
 {
-    static string Root => Path.Combine(Application.persistentDataPath, "ScratchRemix");
-    static string SpriteRoot => Path.Combine(Root, "Sprites");
-    static string AudioRoot  => Path.Combine(Root, "Audio");
+    static string Root => Application.persistentDataPath;
+    static string TempRoot => Path.Combine(Root, "Temp");
+    static string ProjectsRoot => Path.Combine(Root, "Projects");
 
     static readonly string[] SupportedImageExtensions =
     {
@@ -27,74 +35,51 @@ public static class FileImporter
 
     public static void ImportFile(string sourcePath, ImportType type)
     {
-        if (!File.Exists(sourcePath))
-            return;
-
         string extension = Path.GetExtension(sourcePath).ToLowerInvariant();
-
         string[] supportedExtensions;
-        string targetRoot;
-        string typeName;
+        string subDir;
 
         switch (type)
         {
             case ImportType.Image:
                 supportedExtensions = SupportedImageExtensions;
-                targetRoot = SpriteRoot;
-                typeName = "image";
+                subDir = "Sprites";
                 break;
-
             case ImportType.Audio:
                 supportedExtensions = SupportedAudioExtensions;
-                targetRoot = AudioRoot;
-                typeName = "audio";
+                subDir = "Audio";
                 break;
-
             default:
-                Debug.LogWarning($"[Import] Unknown import type: {type}");
                 return;
         }
 
-        if (!supportedExtensions.Contains(extension))
-        {
-            Debug.LogWarning($"[Import] Unsupported {typeName} format: {extension} ({sourcePath})");
-            return;
-        }
+        if (!supportedExtensions.Contains(extension)) return;
 
-        Directory.CreateDirectory(targetRoot);
-
+        string targetDir = Path.Combine(TempRoot, subDir);
+        Directory.CreateDirectory(targetDir);
+        
         string fileName = Path.GetFileName(sourcePath);
-        string targetPath = Path.Combine(targetRoot, fileName);
+        string targetPath = Path.Combine(targetDir, fileName);
 
         File.Copy(sourcePath, targetPath, overwrite: true);
-
-        Debug.Log($"[Import {typeName}] {fileName} → {targetPath}");
+        SaveMetadata(targetPath);
     }
 
-    // For future folder import UI
     public static void ImportDirectory(string sourceDir, ImportType type)
     {
-        if (!Directory.Exists(sourceDir))
-            return;
-
         string[] supportedExtensions;
-        string targetRoot;
-        string typeName;
+        string subDir;
 
         switch (type)
         {
             case ImportType.Image:
                 supportedExtensions = SupportedImageExtensions;
-                targetRoot = SpriteRoot;
-                typeName = "image";
+                subDir = "Sprites";
                 break;
-
             case ImportType.Audio:
                 supportedExtensions = SupportedAudioExtensions;
-                targetRoot = AudioRoot;
-                typeName = "audio";
+                subDir = "Audio";
                 break;
-
             default:
                 return;
         }
@@ -104,17 +89,11 @@ public static class FileImporter
             .Where(f => supportedExtensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
             .ToArray();
 
-        if (supportedFiles.Length == 0)
-        {
-            Debug.LogWarning($"[Import Folder] No supported {typeName} files found in {sourceDir}");
-            return;
-        }
+        if (supportedFiles.Length == 0) return;
 
         string dirName = Path.GetFileName(sourceDir);
-        string targetDir = Path.Combine(targetRoot, dirName);
+        string targetDir = Path.Combine(TempRoot, subDir, dirName);
         Directory.CreateDirectory(targetDir);
-
-        int importedCount = 0;
 
         foreach (var file in supportedFiles)
         {
@@ -123,9 +102,43 @@ public static class FileImporter
 
             Directory.CreateDirectory(Path.GetDirectoryName(targetFilePath));
             File.Copy(file, targetFilePath, overwrite: true);
-            importedCount++;
+            SaveMetadata(targetFilePath);
         }
+    }
 
-        Debug.Log($"[Import Folder {typeName}] Imported {importedCount} files → {targetDir}");
+    public static void FinalizeProject(string projectName)
+    {
+        if (!Directory.Exists(TempRoot)) return;
+
+        string targetProjectDir = Path.Combine(ProjectsRoot, projectName);
+        
+        if (Directory.Exists(targetProjectDir))
+            Directory.Delete(targetProjectDir, true);
+
+        Directory.CreateDirectory(ProjectsRoot);
+        // Use Move for efficiency
+        Directory.Move(TempRoot, targetProjectDir);
+        
+        // Re-create TempRoot after move if needed for further imports
+        Directory.CreateDirectory(TempRoot);
+    }
+
+    public static void ClearTemp()
+    {
+        if (Directory.Exists(TempRoot))
+        {
+            Directory.Delete(TempRoot, true);
+        }
+    }
+
+    private static void SaveMetadata(string filePath)
+    {
+        FileMetadata meta = new()
+        {
+            importTimestamp = DateTime.Now.Ticks,
+            originalName = Path.GetFileName(filePath)
+        };
+        string json = JsonUtility.ToJson(meta);
+        File.WriteAllText(filePath + ".shitbysr", json);
     }
 }

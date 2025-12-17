@@ -5,8 +5,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
-using UnityEngine.UI; // Need this for the Image component
-using System.Linq; // Need for Linq operations like Select
+using UnityEngine.UI;
+using System.Linq;
 
 [RequireComponent(typeof(RectTransform))]
 public class UIBlocksManagerAnimator : MonoBehaviour
@@ -50,8 +50,6 @@ public class UIBlocksManagerAnimator : MonoBehaviour
     private float currentMouseSpeed;
     private float exitSpeed = 0f;
     private bool wasHovering = false;
-
-    // Constant for the total distance of movement
     private const float TotalXDistance = 140f;
 
     void Awake()
@@ -70,7 +68,6 @@ public class UIBlocksManagerAnimator : MonoBehaviour
 
         UpdateToolbarPosition(forceShow);
 
-        // Always update alpha based on current position
         UpdateChildrenAlphaByPosition();
     }
 
@@ -84,14 +81,11 @@ public class UIBlocksManagerAnimator : MonoBehaviour
         startPos = hiddenPos;
         currentHideDelay = baseHideDelay;
 
-        // Find the main camera
         mainCamera = Camera.main;
 
-        // Find all GameObjects with the specified tag and get their colliders
         GameObject[] triggerObjects = GameObject.FindGameObjectsWithTag(triggerColliderTag);
         if (triggerObjects != null && triggerObjects.Length > 0)
         {
-            // Use Linq to efficiently get all Collider2D components
             triggerAreaColliders = triggerObjects
                 .Select(go => go.GetComponent<Collider2D>())
                 .Where(c => c != null)
@@ -103,7 +97,6 @@ public class UIBlocksManagerAnimator : MonoBehaviour
             Debug.LogError($"Could not find any Collider2D with tag '{triggerColliderTag}'. Hover detection will not work!");
         }
 
-        // Set initial alpha to 0 by material control and CanvasGroup
         UpdateChildrenVisualAlpha(0f);
 
         if (Mouse.current != null)
@@ -148,7 +141,6 @@ public class UIBlocksManagerAnimator : MonoBehaviour
         float currentX = toolbar.anchoredPosition.x;
         float progress = currentX - hiddenOffsetX;
 
-        // Calculate the linear T value for alpha (clamped between 0 and 1)
         float targetAlpha = Mathf.Clamp01(progress / TotalXDistance);
 
         UpdateChildrenVisualAlpha(targetAlpha);
@@ -160,10 +152,8 @@ public class UIBlocksManagerAnimator : MonoBehaviour
         if (mainCamera == null || triggerAreaColliders.Count == 0)
             return false;
 
-        // Convert screen position to world position for 2D Physics detection
         Vector2 worldPos = mainCamera.ScreenToWorldPoint(screenPos);
 
-        // Check if the mouse (point) overlaps with ANY of the trigger colliders
         bool overTrigger = false;
         foreach (Collider2D col in triggerAreaColliders)
         {
@@ -174,12 +164,11 @@ public class UIBlocksManagerAnimator : MonoBehaviour
             }
         }
 
-        // Check if the mouse is directly over the UI RectTransform
         bool overToolbar = RectTransformUtility.RectangleContainsScreenPoint(toolbar, screenPos);
 
         return overTrigger || overToolbar;
 #else
-        return false; // Mobile implementation handles this differently (double tap)
+        return false;
 #endif
     }
 

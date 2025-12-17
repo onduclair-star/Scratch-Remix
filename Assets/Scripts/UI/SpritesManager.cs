@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 public class SpritesManager : MonoBehaviour
@@ -18,15 +19,17 @@ public class SpritesManager : MonoBehaviour
     [SerializeField]
     private GameObject[] uiToSkip;
 
+    private struct SpriteLoadData
+    {
+        public string filePath;
+        public long timestamp;
+    }
 
     async void Start()
     {
         await ReloadSprites();
     }
 
-    /// <summary>
-    /// 对外统一刷新入口（启动 / Import 后都用它）
-    /// </summary>
     public async Task ReloadSprites()
     {
         ClearUI();
@@ -36,13 +39,38 @@ public class SpritesManager : MonoBehaviour
         if (!Directory.Exists(spritesPath))
             Directory.CreateDirectory(spritesPath);
 
-        string[] files = Directory.GetFiles(spritesPath);
+        // Get all files recursively to handle imported directories in Temp
+        string[] files = Directory.GetFiles(spritesPath, "*.*", SearchOption.AllDirectories)
+            .Where(f => !f.EndsWith(".shitbysr")).ToArray();
+
+        List<SpriteLoadData> loadList = new();
 
         foreach (var file in files)
         {
-            byte[] data = await ReadFileAsync(file);
-            if (data == null) continue;
+            long ts = 0;
+            string metaPath = file + ".shitbysr";
+            if (File.Exists(metaPath))
+            {
+                var meta = JsonUtility.FromJson<FileMetadata>(File.ReadAllText(metaPath));
+                ts = meta.importTimestamp;
+            }
+            else
+            {
+                ts = File.GetCreationTime(file).Ticks;
+            }
 
+            loadList.Add(new SpriteLoadData { filePath = file, timestamp = ts });
+        }
+
+        var sortedList = loadList.OrderBy(x => x.timestamp).ToList();
+
+        int displayIndex = 0;
+
+        for (int i = 0; i < sortedList.Count; i++)
+        {
+            string file = sortedList[i].filePath;
+            byte[] data = await ReadFileAsync(file);
+            
             Texture2D tex = new(2, 2, TextureFormat.RGBA32, false);
             if (!tex.LoadImage(data)) continue;
 
@@ -53,26 +81,32 @@ public class SpritesManager : MonoBehaviour
                 100f
             );
 
+            // Using filename as identifier to avoid full path in UI name
+            string fileName = Path.GetFileNameWithoutExtension(file);
             sprites.Add(sprite);
-            CreateSpriteUI(sprite, Path.GetFileNameWithoutExtension(file));
+            
+            CreateSpriteUI(sprite, fileName, displayIndex);
+            displayIndex++;
         }
     }
 
-    // /// <summary>
-    // /// 对外统一刷新声音入口（启动 / Import 后都用它）
-    // /// </summary>
-    // public async Task ReloadAudios()
-    // {
-    //     // TODO: 爱咋地咋地，现在没用 :)
-    // }
-
-    private void CreateSpriteUI(Sprite sprite, string name)
+    private void CreateSpriteUI(Sprite sprite, string name, int index)
     {
         GameObject go = new(name);
         go.transform.SetParent(spritesContainer, false);
 
         RectTransform rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0, 1);
+        rt.anchorMax = new Vector2(0, 1);
+        rt.pivot = new Vector2(0.5f, 0.5f);
         rt.sizeDelta = defaultSpriteSize;
+
+        int n = index % 8; 
+        int m = index / 8; 
+
+        float posX = n * 100 + 75;
+        float posY = -m * 100 - 75;
+        rt.anchoredPosition = new Vector2(posX, posY);
 
         Image img = go.AddComponent<Image>();
         img.sprite = sprite;
@@ -82,23 +116,18 @@ public class SpritesManager : MonoBehaviour
     private void ClearUI()
     {
         HashSet<GameObject> skip = new(uiToSkip);
-
         for (int i = spritesContainer.childCount - 1; i >= 0; i--)
         {
             var child = spritesContainer.GetChild(i).gameObject;
             if (skip.Contains(child)) continue;
-
             Destroy(child);
         }
     }
 
     private static string GetSpritesPath()
     {
-        return Path.Combine(
-            Application.persistentDataPath,
-            "ScratchRemix",
-            "Sprites"
-        );
+        // Now pointing to the Temp/Sprites directory
+        return Path.Combine(Application.persistentDataPath, "Temp", "Sprites");
     }
 
     private static async Task<byte[]> ReadFileAsync(string path)

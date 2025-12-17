@@ -75,12 +75,11 @@ public static class ParentChainManager
                 cam,
                 out finalLocalPoint))
         {
-            Vector2 targetLocalPoint;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                     newParentRect,
                     RectTransformUtility.WorldToScreenPoint(cam, targetRect.position),
                     cam,
-                    out targetLocalPoint))
+                    out Vector2 targetLocalPoint))
             {
                 Debug.LogError("[ParentChainManager] FAILED to calculate target X base, using calculated X!");
                 targetLocalPoint.x = finalLocalPoint.x;
