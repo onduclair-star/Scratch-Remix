@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 public class SpritesManager : MonoBehaviour
 {
+    public Task InitializationTask { get; private set; }
+    
     [HideInInspector]
     public List<Sprite> sprites = new();
 
@@ -19,15 +21,10 @@ public class SpritesManager : MonoBehaviour
     [SerializeField]
     private GameObject[] uiToSkip;
 
-    private struct SpriteLoadData
+    void Awake()
     {
-        public string filePath;
-        public long timestamp;
-    }
-
-    async void Start()
-    {
-        await ReloadSprites();
+        // Assign the task immediately in Awake
+        InitializationTask = ReloadSprites();
     }
 
     public async Task ReloadSprites()
@@ -39,7 +36,6 @@ public class SpritesManager : MonoBehaviour
         if (!Directory.Exists(spritesPath))
             Directory.CreateDirectory(spritesPath);
 
-        // Get all files recursively to handle imported directories in Temp
         string[] files = Directory.GetFiles(spritesPath, "*.*", SearchOption.AllDirectories)
             .Where(f => !f.EndsWith(".shitbysr")).ToArray();
 
@@ -65,7 +61,6 @@ public class SpritesManager : MonoBehaviour
         var sortedList = loadList.OrderBy(x => x.timestamp).ToList();
 
         int displayIndex = 0;
-
         for (int i = 0; i < sortedList.Count; i++)
         {
             string file = sortedList[i].filePath;
@@ -81,8 +76,8 @@ public class SpritesManager : MonoBehaviour
                 100f
             );
 
-            // Using filename as identifier to avoid full path in UI name
             string fileName = Path.GetFileNameWithoutExtension(file);
+            sprite.name = fileName; // Set name so we can use it in DisplaySprites
             sprites.Add(sprite);
             
             CreateSpriteUI(sprite, fileName, displayIndex);
@@ -94,7 +89,6 @@ public class SpritesManager : MonoBehaviour
     {
         GameObject go = new(name);
         go.transform.SetParent(spritesContainer, false);
-
         RectTransform rt = go.AddComponent<RectTransform>();
         rt.anchorMin = new Vector2(0, 1);
         rt.anchorMax = new Vector2(0, 1);
@@ -103,10 +97,7 @@ public class SpritesManager : MonoBehaviour
 
         int n = index % 8; 
         int m = index / 8; 
-
-        float posX = n * 100 + 75;
-        float posY = -m * 100 - 75;
-        rt.anchoredPosition = new Vector2(posX, posY);
+        rt.anchoredPosition = new Vector2(n * 100 + 75, -m * 100 - 75);
 
         Image img = go.AddComponent<Image>();
         img.sprite = sprite;
@@ -124,22 +115,13 @@ public class SpritesManager : MonoBehaviour
         }
     }
 
-    private static string GetSpritesPath()
-    {
-        // Now pointing to the Temp/Sprites directory
-        return Path.Combine(Application.persistentDataPath, "Temp", "Sprites");
-    }
+    private static string GetSpritesPath() => Path.Combine(Application.persistentDataPath, "Temp", "Sprites");
 
     private static async Task<byte[]> ReadFileAsync(string path)
     {
-        try
-        {
-            return await Task.Run(() => File.ReadAllBytes(path));
-        }
-        catch (IOException e)
-        {
-            Debug.LogError($"[SpritesManager] Failed to load {path}\n{e}");
-            return null;
-        }
+        try { return await Task.Run(() => File.ReadAllBytes(path)); }
+        catch (IOException) { return null; }
     }
+
+    private struct SpriteLoadData { public string filePath; public long timestamp; }
 }

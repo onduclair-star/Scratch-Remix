@@ -1706,6 +1706,7 @@ GameObject:
   - component: {fileID: 699512883}
   - component: {fileID: 699512884}
   - component: {fileID: 699512885}
+  - component: {fileID: 699512886}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -1851,6 +1852,19 @@ MonoBehaviour:
   defaultSpriteSize: {x: 100, y: 100}
   uiToSkip:
   - {fileID: 1588341564}
+--- !u!114 &699512886
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 699512877}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8880bbb61420841d7a7d11b0c90d912d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DisplaySprites
+  container: {fileID: 372317280}
 --- !u!1 &722445960 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9211392182186122663, guid: dcd2213f41d7b417f87993d8c30e9679, type: 3}

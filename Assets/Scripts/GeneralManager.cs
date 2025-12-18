@@ -5,12 +5,14 @@ public class GeneralManager : MonoBehaviour
 {
     public GameObject[] highQualityGameObjects, mediumQualityGameObjects;
     public Image toolbar;
+    public Texture2D cursor;
     private const int DefaultRefreshRate = 60;
 
     void Awake()
     {
         ApplyVSync();
         HighQuality();
+        Cursor.SetCursor(cursor, Vector2.zero, CursorMode.Auto);
     }
 
     private void SetGameObjectsActive(GameObject[] objects, bool active)
