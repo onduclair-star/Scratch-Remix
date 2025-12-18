@@ -477,6 +477,7 @@ MonoBehaviour:
   - {fileID: 619394800}
   mediumQualityGameObjects: []
   toolbar: {fileID: 851915254}
+  cursor: {fileID: 2800000, guid: 13790dbd04f8347699d49e5f9599ce3f, type: 3}
 --- !u!4 &69275921
 Transform:
   m_ObjectHideFlags: 0
