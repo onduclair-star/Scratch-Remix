@@ -1853,6 +1853,7 @@ MonoBehaviour:
   defaultSpriteSize: {x: 100, y: 100}
   uiToSkip:
   - {fileID: 1588341564}
+  closeIconSprite: {fileID: -5611982884713467004, guid: 682e4b018219049efa7ff83a81ecc246, type: 3}
 --- !u!114 &699512886
 MonoBehaviour:
   m_ObjectHideFlags: 0

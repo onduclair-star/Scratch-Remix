@@ -10,13 +10,28 @@ public class DisplaySprites : MonoBehaviour
     async void Start()
     {
         spritesManager = GetComponent<SpritesManager>();
+        spritesManager.SpritesReloaded += RebuildSprites;
         await spritesManager.InitializationTask;
-
-        CreateDraggableSprites();
+        RebuildSprites();
     }
 
-    private void CreateDraggableSprites()
+    private void OnDisable()
     {
+        if (spritesManager != null)
+        {
+            spritesManager.SpritesReloaded -= RebuildSprites;
+        }
+    }
+
+    private void RebuildSprites()
+    {
+        if (container == null || spritesManager == null) return;
+
+        for (int i = container.transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(container.transform.GetChild(i).gameObject);
+        }
+
         foreach (var sprite in spritesManager.sprites)
         {
             GameObject go = new(sprite.name);
